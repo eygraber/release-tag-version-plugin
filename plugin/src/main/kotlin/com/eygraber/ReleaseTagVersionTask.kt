@@ -11,6 +11,7 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -48,9 +49,7 @@ abstract class ReleaseTagVersionTask : DefaultTask() {
   @get:Optional
   abstract val versionOverrideFile: RegularFileProperty
 
-  @get:InputDirectory
-  @get:PathSensitive(RELATIVE)
-  @get:Optional
+  @get:Internal
   abstract val gitDir: DirectoryProperty
 
   @get:InputDirectory

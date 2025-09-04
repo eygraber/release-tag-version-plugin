@@ -31,6 +31,10 @@ jobs:
         with:
           gradle-version: wrapper
 
+      # if this doesn't exist the configuration cache has problems that cause tests to fail
+      - name: Create cache directory
+        run: mkdir -p ~/.config/.android/cache
+
       - name: Run build task
         run: ./gradlew build
 

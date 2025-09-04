@@ -388,18 +388,40 @@ class ReleaseTagVersionPluginTest {
     ProcessBuilder("git", "init")
       .directory(testProjectDir.root)
       .start()
-      .waitFor()
+      .apply {
+        if(waitFor() != 0) {
+          error("Failed to initialize git - ${errorReader().readText()}")
+        }
+      }
 
-    ProcessBuilder("git", "commit", "--allow-empty", "-m", "initial commit")
+    ProcessBuilder(
+      "git",
+      "-c",
+      "user.name=Test",
+      "-c",
+      "user.email=test@test.com",
+      "commit",
+      "--allow-empty",
+      "-m",
+      "initial commit",
+    )
       .directory(testProjectDir.root)
       .start()
-      .waitFor()
+      .apply {
+        if(waitFor() != 0) {
+          error("Failed to create git commit - ${errorReader().readText()}")
+        }
+      }
 
     tags.forEach { tag ->
       ProcessBuilder("git", "tag", tag)
         .directory(testProjectDir.root)
         .start()
-        .waitFor()
+        .apply {
+          if(waitFor() != 0) {
+            error("Failed to create git tag $tag - ${errorReader().readText()}")
+          }
+        }
     }
   }
 

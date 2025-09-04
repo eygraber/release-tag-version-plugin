@@ -5,8 +5,8 @@ plugins {
   `kotlin-dsl`
   alias(libs.plugins.conventionsKotlin)
   alias(libs.plugins.conventionsDetekt)
+  alias(libs.plugins.conventionsPublishToMavenCentral)
   alias(libs.plugins.dependencyAnalysis)
-  alias(libs.plugins.mavenPublish)
 }
 
 kotlin {

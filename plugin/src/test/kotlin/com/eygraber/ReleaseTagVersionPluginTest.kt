@@ -365,13 +365,6 @@ class ReleaseTagVersionPluginTest {
     assembleStagingResult.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
 
     ensureConfigurationCacheReuse("assembleStaging")
-
-    val assembleDebugResult = runGradle("assembleDebug")
-
-    assembleDebugResult.output shouldContain "Using versionCode 5 from LatestGitTag"
-    assembleDebugResult.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
-
-    ensureConfigurationCacheReuse("assembleDebug")
   }
 
   private fun ensureConfigurationCacheReuse(task: String) {

@@ -7,7 +7,7 @@ A Gradle plugin that uses the latest git semantic version tag to set the version
 1.  Apply the plugin to your `build.gradle.kts` file:
     ```kotlin
     plugins {
-      id("com.eygraber.release-tag-version") version "0.7.6"
+      id("com.eygraber.release-tag-version") version "0.7.7"
     }
     ```
 

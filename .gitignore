@@ -1,0 +1,45 @@
+*~
+
+# Android Studio / Intellij
+.idea
+*.iml
+/captures
+test-sd-card.img
+# External native build folder generated in Android Studio 2.2 and later
+.externalNativeBuild\
+# Make an exception for the code style and project prompts
+!.idea/codeStyles/
+!.idea/project.prompts.xml
+
+# CI
+ejson/*
+ci/*
+
+# Google Services (e.g. APIs or Firebase)
+google-services.json
+
+# Gradle
+.gradle
+build/
+
+# Gradle Play Publisher
+app/src/main/play/
+
+# Kotlin
+.kotlin
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# MacOS system files
+.DS_Store
+
+# Swift
+.swiftpm
+# This is force added in the release branches
+Package.swift
+
+tmp
+node_modules
+*.dmg
+

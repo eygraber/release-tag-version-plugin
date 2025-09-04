@@ -1,0 +1,44 @@
+public abstract interface class com/eygraber/ReleaseTagVersionExtension {
+	public abstract fun getFallbackVersionCode ()Lorg/gradle/api/provider/Property;
+	public abstract fun getFallbackVersionName ()Lorg/gradle/api/provider/Property;
+	public abstract fun getReleaseBuildTypes ()Lorg/gradle/api/provider/SetProperty;
+	public abstract fun getVersionCodeIsInferred ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionCodeOverride ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionNameIsInferred ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionNameOverride ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionOverride ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionOverrideFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getVersionPrefix ()Lorg/gradle/api/provider/Property;
+}
+
+public final class com/eygraber/ReleaseTagVersionPlugin : org/gradle/api/Plugin {
+	public fun <init> ()V
+	public synthetic fun apply (Ljava/lang/Object;)V
+	public fun apply (Lorg/gradle/api/Project;)V
+}
+
+public final class com/eygraber/ReleaseTagVersionPlugin$inlined$sam$i$org_gradle_api_Action$0 : org/gradle/api/Action {
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public final synthetic fun execute (Ljava/lang/Object;)V
+}
+
+public abstract class com/eygraber/ReleaseTagVersionTask : org/gradle/api/DefaultTask {
+	public fun <init> ()V
+	public abstract fun getBuildType ()Lorg/gradle/api/provider/Property;
+	public abstract fun getFallbackVersionCode ()Lorg/gradle/api/provider/Property;
+	public abstract fun getFallbackVersionName ()Lorg/gradle/api/provider/Property;
+	public abstract fun getGitDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getGitTagsDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getReleaseBuildTypes ()Lorg/gradle/api/provider/SetProperty;
+	public final fun getVersion ()V
+	public abstract fun getVersionCodeFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getVersionCodeIsInferred ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionCodeOverride ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionNameFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getVersionNameIsInferred ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionNameOverride ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionOverride ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionOverrideFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getVersionPrefix ()Lorg/gradle/api/provider/Property;
+}
+

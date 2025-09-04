@@ -1,0 +1,49 @@
+[versions]
+android-plugin = "8.13.0"
+
+conventions = "0.0.87"
+
+detekt = "1.23.8"
+detektCompose = "0.4.27"
+detektEygraber = "1.0.12"
+
+dokka = "2.0.0"
+
+jvmTarget = "17"
+
+kotest = "6.0.2"
+
+kotlin = "2.2.10"
+
+ktlint = "1.7.1"
+
+publish = "0.34.0"
+
+[plugins]
+conventionsBase = { id = "com.eygraber.conventions", version.ref = "conventions" }
+conventionsDetekt = { id = "com.eygraber.conventions-detekt" }
+conventionsKotlin = { id = "com.eygraber.conventions-kotlin-library" }
+dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis" }
+dependencyAnalysisRoot = { id = "com.autonomousapps.dependency-analysis", version = "3.0.1" }
+mavenPublish = { id = "com.vanniktech.maven.publish" }
+
+[libraries]
+buildscript-android = { module = "com.android.tools.build:gradle", version.ref = "android-plugin" }
+buildscript-detekt = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
+buildscript-dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
+buildscript-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+buildscript-publish = { module = "com.vanniktech:gradle-maven-publish-plugin", version.ref = "publish" }
+
+detektEygraber-formatting = { module = "com.eygraber.detekt.rules:formatting", version.ref = "detektEygraber" }
+detektEygraber-style = { module = "com.eygraber.detekt.rules:style", version.ref = "detektEygraber" }
+
+# just here so renovate picks it up
+# noinspection UnusedVersionCatalogEntry
+ktlint = { module = "com.pinterest.ktlint:ktlint-bom", version.ref = "ktlint" }
+
+semver = "io.github.z4kn4fein:semver:3.0.0"
+
+test-junit = "junit:junit:4.13.2"
+test-kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+test-kotest-assertions-shared = { module = "io.kotest:kotest-assertions-shared", version.ref = "kotest" }
+

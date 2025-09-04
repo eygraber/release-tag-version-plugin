@@ -23,9 +23,9 @@ publish = "0.34.0"
 conventionsBase = { id = "com.eygraber.conventions", version.ref = "conventions" }
 conventionsDetekt = { id = "com.eygraber.conventions-detekt" }
 conventionsKotlin = { id = "com.eygraber.conventions-kotlin-library" }
+conventionsPublishToMavenCentral = { id = "com.eygraber.conventions-publish-maven-central" }
 dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis" }
 dependencyAnalysisRoot = { id = "com.autonomousapps.dependency-analysis", version = "3.0.1" }
-mavenPublish = { id = "com.vanniktech.maven.publish" }
 
 [libraries]
 buildscript-android = { module = "com.android.tools.build:gradle", version.ref = "android-plugin" }

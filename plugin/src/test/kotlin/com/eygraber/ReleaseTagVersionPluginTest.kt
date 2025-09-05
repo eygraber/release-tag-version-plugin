@@ -8,6 +8,7 @@ import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 import java.util.Properties
 
 class ReleaseTagVersionPluginTest {
@@ -43,7 +44,7 @@ class ReleaseTagVersionPluginTest {
       """.trimMargin(),
     )
 
-    setupGitTags("1.2.3")
+    gitInit("1.2.3")
 
     val result = runGradle("assembleRelease")
 
@@ -69,7 +70,7 @@ class ReleaseTagVersionPluginTest {
       """.trimMargin(),
     )
 
-    setupGitTags("1.2.3+5")
+    gitInit("1.2.3+5")
 
     val result = runGradle("assembleRelease")
 
@@ -89,7 +90,7 @@ class ReleaseTagVersionPluginTest {
       """.trimMargin(),
     )
 
-    setupGitTags("1.0.0+1")
+    gitInit("1.0.0+1")
     writeVersionOverrideFile("1.0.0+1")
 
     val result = runGradle("assembleRelease")
@@ -110,7 +111,7 @@ class ReleaseTagVersionPluginTest {
       """.trimMargin(),
     )
 
-    setupGitTags("1.0.0+1")
+    gitInit("1.0.0+1")
 
     val result = runGradle("assembleRelease")
 
@@ -130,7 +131,7 @@ class ReleaseTagVersionPluginTest {
       """.trimMargin(),
     )
 
-    setupGitTags("1.0.0+2")
+    gitInit("1.0.0+2")
     writeVersionOverrideFile("1.0.0+1")
 
     val result = runGradle("assembleRelease")
@@ -152,7 +153,7 @@ class ReleaseTagVersionPluginTest {
       """.trimMargin(),
     )
 
-    setupGitTags("1.0.0+1")
+    gitInit("1.0.0+1")
     writeVersionOverrideFile("1.0.0+1")
 
     val result = runGradle("assembleRelease")
@@ -174,7 +175,7 @@ class ReleaseTagVersionPluginTest {
       """.trimMargin(),
     )
 
-    setupGitTags("1.0.0+1")
+    gitInit("1.0.0+1")
     writeVersionOverrideFile("1.0.0+1")
 
     val result = runGradle("assembleRelease")
@@ -196,7 +197,7 @@ class ReleaseTagVersionPluginTest {
       """.trimMargin(),
     )
 
-    setupGitTags("1.0.0+1")
+    gitInit("1.0.0+1")
     writeVersionOverrideFile("1.0.0+1")
 
     val result = runGradle("assembleRelease")
@@ -211,7 +212,7 @@ class ReleaseTagVersionPluginTest {
   fun `versionOverrideFile is used`() {
     writeBuildFiles()
 
-    setupGitTags("1.0.0+1")
+    gitInit("1.0.0+1")
     writeVersionOverrideFile("1.2.3+5")
 
     val result = runGradle("assembleRelease")
@@ -226,7 +227,7 @@ class ReleaseTagVersionPluginTest {
   fun `versionOverrideFile without a version code uses the git tag`() {
     writeBuildFiles()
 
-    setupGitTags("1.0.0+1")
+    gitInit("1.0.0+1")
     writeVersionOverrideFile("1.2.3")
 
     val result = runGradle("assembleRelease")
@@ -241,7 +242,7 @@ class ReleaseTagVersionPluginTest {
   fun `versionOverrideFile without a numeric version code uses the fallback`() {
     writeBuildFiles()
 
-    setupGitTags("1.0.0+1")
+    gitInit("1.0.0+1")
     writeVersionOverrideFile("1.2.3+abc")
 
     val result = runGradle("assembleRelease")
@@ -256,7 +257,7 @@ class ReleaseTagVersionPluginTest {
   fun `git tag is used`() {
     writeBuildFiles()
 
-    setupGitTags("1.2.3+4")
+    gitInit("1.2.3+4")
 
     val result = runGradle("assembleRelease")
 
@@ -270,7 +271,7 @@ class ReleaseTagVersionPluginTest {
   fun `git tag without version code is used`() {
     writeBuildFiles()
 
-    setupGitTags("1.2.3")
+    gitInit("1.2.3")
 
     val result = runGradle("assembleRelease")
 
@@ -284,7 +285,7 @@ class ReleaseTagVersionPluginTest {
   fun `git tag without a numeric version code uses the fallback`() {
     writeBuildFiles()
 
-    setupGitTags("1.2.3+abc")
+    gitInit("1.2.3+abc")
 
     val result = runGradle("assembleRelease")
 
@@ -315,7 +316,7 @@ class ReleaseTagVersionPluginTest {
       """.trimMargin(),
     )
 
-    setupGitTags("1.2.2+4", "a1.2.3+5", "v1.2.4+6")
+    gitInit("1.2.2+4", "a1.2.3+5", "v1.2.4+6")
 
     val result = runGradle("assembleRelease")
 
@@ -329,7 +330,7 @@ class ReleaseTagVersionPluginTest {
   fun `debug build type increments version code`() {
     writeBuildFiles()
 
-    setupGitTags("1.2.3+4")
+    gitInit("1.2.3+4")
 
     val result = runGradle("assembleDebug")
 
@@ -357,7 +358,7 @@ class ReleaseTagVersionPluginTest {
       """.trimMargin(),
     )
 
-    setupGitTags("1.2.3+4")
+    gitInit("1.2.3+4")
 
     val assembleStagingResult = runGradle("assembleStaging")
 
@@ -365,6 +366,291 @@ class ReleaseTagVersionPluginTest {
     assembleStagingResult.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
 
     ensureConfigurationCacheReuse("assembleStaging")
+  }
+
+  @Test
+  fun `versionCodeIsInferred invalidates the task and configuration cache`() {
+    writeBuildFiles()
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    appendToBuildFile(
+      """
+      |android {
+      |  defaultConfig {
+      |    versionCode = 5
+      |  }
+      |}
+      |
+      |releaseTagVersion {
+      |  versionCodeIsInferred.set(false)
+      |}
+      """.trimMargin(),
+    )
+
+    val nextResult = runGradle("assembleRelease")
+
+    nextResult.output shouldNotContain "Using versionCode"
+    nextResult.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+    nextResult.output shouldNotContain "Reusing configuration cache."
+  }
+
+  @Test
+  fun `versionNameIsInferred invalidates the task and configuration cache`() {
+    writeBuildFiles()
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    appendToBuildFile(
+      """
+      |android {
+      |  defaultConfig {
+      |    versionName = "1.0.0"
+      |  }
+      |}
+      |
+      |releaseTagVersion {
+      |  versionNameIsInferred.set(false)
+      |}
+      """.trimMargin(),
+    )
+
+    val nextResult = runGradle("assembleRelease")
+    nextResult.output shouldContain "Using versionCode 4 from LatestGitTag"
+    nextResult.output shouldNotContain "Using versionName"
+    nextResult.output shouldNotContain "Reusing configuration cache."
+  }
+
+  @Test
+  fun `versionOverride invalidates the task and configuration cache`() {
+    writeBuildFiles()
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    val nextResult = runGradle("assembleRelease", "-PversionOverride=1.2.4+5")
+
+    nextResult.output shouldContain "Using versionCode 5 from OverridingProperty"
+    nextResult.output shouldContain "Using versionName 1.2.4 from OverridingProperty"
+    nextResult.output shouldNotContain "Reusing configuration cache."
+  }
+
+  @Test
+  fun `versionCodeOverride invalidates the task and configuration cache`() {
+    writeBuildFiles()
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    val nextResult = runGradle("assembleRelease", "-PversionCodeOverride=5")
+
+    nextResult.output shouldContain "Using versionCode 5 from OverridingProperty"
+    nextResult.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+    nextResult.output shouldNotContain "Reusing configuration cache."
+  }
+
+  @Test
+  fun `versionNameOverride invalidates the task and configuration cache`() {
+    writeBuildFiles()
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    val nextResult = runGradle("assembleRelease", "-PversionNameOverride=1.2.4")
+
+    nextResult.output shouldContain "Using versionCode 4 from LatestGitTag"
+    nextResult.output shouldContain "Using versionName 1.2.4 from OverridingProperty"
+    nextResult.output shouldNotContain "Reusing configuration cache."
+  }
+
+  @Test
+  fun `a versionOverrideFile invalidates the task and the configuration cache`() {
+    writeBuildFiles()
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    writeVersionOverrideFile("1.2.4+5")
+
+    val nextResult = runGradle("assembleRelease")
+
+    nextResult.output shouldContain "Using versionCode 5 from OverridingFile"
+    nextResult.output shouldContain "Using versionName 1.2.4 from OverridingFile"
+    nextResult.output shouldNotContain "Reusing configuration cache."
+  }
+
+  @Test
+  fun `a new git tag invalidates the task but not the configuration cache`() {
+    writeBuildFiles()
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    gitTag("1.2.4+5")
+
+    val nextResult = runGradle("assembleRelease")
+
+    nextResult.output shouldContain "Using versionCode 5 from LatestGitTag"
+    nextResult.output shouldContain "Using versionName 1.2.4 from LatestGitTag"
+    nextResult.output shouldContain "Reusing configuration cache."
+  }
+
+  @Test
+  fun `a new git commit does not invalidate the task or the configuration cache`() {
+    writeBuildFiles()
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    gitCommit("a new commit")
+
+    val nextResult = runGradle("assembleRelease")
+
+    nextResult.output shouldNotContain "Using versionCode 4 from LatestGitTag"
+    nextResult.output shouldNotContain "Using versionName 1.2.3 from LatestGitTag"
+    nextResult.output shouldContain "Reusing configuration cache."
+  }
+
+  @Test
+  fun `fallbackVersionCode invalidates the task and configuration cache`() {
+    writeBuildFiles()
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 1 from Fallback"
+    result.output shouldContain "Using versionName 1.0.0 from Fallback"
+
+    appendToBuildFile(
+      """
+      |releaseTagVersion {
+      |  fallbackVersionCode.set(2)
+      |}
+      """.trimMargin(),
+    )
+
+    val nextResult = runGradle("assembleRelease")
+
+    nextResult.output shouldContain "Using versionCode 2 from Fallback"
+    nextResult.output shouldContain "Using versionName 1.0.0 from Fallback"
+    nextResult.output shouldNotContain "Reusing configuration cache."
+  }
+
+  @Test
+  fun `fallbackVersionName invalidates the task and configuration cache`() {
+    writeBuildFiles()
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 1 from Fallback"
+    result.output shouldContain "Using versionName 1.0.0 from Fallback"
+
+    appendToBuildFile(
+      """
+      |releaseTagVersion {
+      |  fallbackVersionName.set("2.0.0")
+      |}
+      """.trimMargin(),
+    )
+
+    val nextResult = runGradle("assembleRelease")
+
+    nextResult.output shouldContain "Using versionCode 1 from Fallback"
+    nextResult.output shouldContain "Using versionName 2.0.0 from Fallback"
+    nextResult.output shouldNotContain "Reusing configuration cache."
+  }
+
+  @Test
+  fun `versionPrefix invalidates the task and configuration cache`() {
+    writeBuildFiles()
+
+    gitInit("v1.2.3+4", "p1.2.4+5")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 1 from Fallback"
+    result.output shouldContain "Using versionName 1.0.0 from Fallback"
+
+    appendToBuildFile(
+      """
+      |releaseTagVersion {
+      |  versionPrefix.set("v")
+      |}
+      """.trimMargin(),
+    )
+
+    val nextResult = runGradle("assembleRelease")
+
+    nextResult.output shouldContain "Using versionCode 4 from LatestGitTag"
+    nextResult.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+    nextResult.output shouldNotContain "Reusing configuration cache."
+  }
+
+  @Test
+  fun `releaseBuildTypes invalidates the task and configuration cache`() {
+    writeBuildFiles(
+      """
+      |android {
+      |  buildTypes {
+      |    create("staging")
+      |  }
+      |}
+      """.trimMargin(),
+    )
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleStaging")
+
+    result.output shouldContain "Using versionCode 5 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    appendToBuildFile(
+      """
+      |releaseTagVersion {
+      |  releaseBuildTypes.set(setOf("staging"))
+      |}
+      """.trimMargin(),
+    )
+
+    val nextResult = runGradle("assembleStaging")
+
+    nextResult.output shouldContain "Using versionCode 4 from LatestGitTag"
+    nextResult.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+    nextResult.output shouldNotContain "Reusing configuration cache."
   }
 
   private fun ensureConfigurationCacheReuse(task: String) {
@@ -382,7 +668,7 @@ class ReleaseTagVersionPluginTest {
       .withTestKitDir(testKitDir.root)
       .build()
 
-  private fun setupGitTags(
+  private fun gitInit(
     vararg tags: String,
   ) {
     ProcessBuilder("git", "init")
@@ -394,6 +680,12 @@ class ReleaseTagVersionPluginTest {
         }
       }
 
+    gitCommit("initial commit")
+
+    gitTag(*tags)
+  }
+
+  private fun gitCommit(message: String) {
     ProcessBuilder(
       "git",
       "-c",
@@ -403,7 +695,7 @@ class ReleaseTagVersionPluginTest {
       "commit",
       "--allow-empty",
       "-m",
-      "initial commit",
+      message,
     )
       .directory(testProjectDir.root)
       .start()
@@ -412,7 +704,11 @@ class ReleaseTagVersionPluginTest {
           error("Failed to create git commit - ${errorReader().readText()}")
         }
       }
+  }
 
+  private fun gitTag(
+    vararg tags: String,
+  ) {
     tags.forEach { tag ->
       ProcessBuilder("git", "tag", tag)
         .directory(testProjectDir.root)
@@ -443,7 +739,7 @@ class ReleaseTagVersionPluginTest {
     }
 
     Properties().apply {
-      set("org.gradle.caching", "true")
+      set("org.gradle.caching", "false")
       set("org.gradle.parallel", "true")
       set("org.gradle.configuration-cache", "true")
       set("org.gradle.configuration-cache.parallel", "true")
@@ -503,6 +799,7 @@ class ReleaseTagVersionPluginTest {
       |}
       |
       |$$buildGradleContent
+      |
       """.trimMargin(),
     )
 
@@ -513,5 +810,13 @@ class ReleaseTagVersionPluginTest {
       |<manifest xmlns:android="http://schemas.android.com/apk/res/android" />
       """.trimMargin(),
     )
+  }
+
+  private fun appendToBuildFile(
+    @Language("kotlin")
+    appendedContent: String = "",
+  ) {
+    val buildFile = File(testProjectDir.root, "build.gradle.kts")
+    buildFile.appendText(appendedContent)
   }
 }

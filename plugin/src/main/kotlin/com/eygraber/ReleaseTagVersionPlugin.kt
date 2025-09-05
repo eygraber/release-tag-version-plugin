@@ -36,9 +36,9 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
     versionOverrideFile.convention(project.layout.projectDirectory.file(".version-override"))
     fallbackVersionCode.convention(1)
     fallbackVersionName.convention("1.0.0")
-    versionOverride.convention(null)
-    versionCodeOverride.convention(null)
-    versionNameOverride.convention(null)
+    versionOverride.convention(project.findProperty("versionOverride") as? String)
+    versionCodeOverride.convention((project.findProperty("versionCodeOverride") as? String)?.toIntOrNull())
+    versionNameOverride.convention(project.findProperty("versionNameOverride") as? String)
     versionPrefix.convention("")
     releaseBuildTypes.convention(setOf("release"))
   }

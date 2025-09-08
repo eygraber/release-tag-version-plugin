@@ -45,5 +45,5 @@ semver = "io.github.z4kn4fein:semver:3.0.0"
 
 test-junit = "junit:junit:4.13.2"
 test-kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
-test-kotest-assertions-shared = { module = "io.kotest:kotest-assertions-shared", version.ref = "kotest" }
+test-parameterInjector = "com.google.testparameterinjector:test-parameter-injector:1.18"
 

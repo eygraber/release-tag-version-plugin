@@ -173,7 +173,7 @@ abstract class ReleaseTagVersionTask : DefaultTask() {
         parentFile.mkdirs()
         writeText(
           finalVersionCode.toString().also {
-            logger.info("Using versionCode $it from $source")
+            logger.lifecycle("Using versionCode $it from $source")
           },
         )
       }
@@ -194,7 +194,7 @@ abstract class ReleaseTagVersionTask : DefaultTask() {
         parentFile.mkdirs()
         writeText(
           versionName.also {
-            logger.info("Using versionName $it from $source")
+            logger.lifecycle("Using versionName $it from $source")
           },
         )
       }

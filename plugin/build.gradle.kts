@@ -1,4 +1,5 @@
 import com.eygraber.conventions.kotlin.KotlinFreeCompilerArg
+import com.eygraber.conventions.kotlin.KotlinOptIn
 import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 plugins {
@@ -34,6 +35,7 @@ dependencies {
   testImplementation(gradleTestKit())
   testImplementation(libs.test.junit)
   testImplementation(libs.test.kotest.assertions.core)
+  testImplementation(libs.test.parameterInjector)
 
   additionalPluginClasspath(libs.buildscript.android)
 }
@@ -42,10 +44,15 @@ tasks {
   pluginUnderTestMetadata {
     pluginClasspath.from(additionalPluginClasspath)
   }
+
+  test {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+  }
 }
 
 gradleConventions {
   kotlin {
     freeCompilerArgs += KotlinFreeCompilerArg.Unknown("-Xmulti-dollar-interpolation")
+    freeCompilerArgs += KotlinFreeCompilerArg.Unknown("-Xcontext-parameters")
   }
 }

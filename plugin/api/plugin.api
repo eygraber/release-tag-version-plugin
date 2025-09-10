@@ -17,11 +17,6 @@ public final class com/eygraber/ReleaseTagVersionPlugin : org/gradle/api/Plugin 
 	public fun apply (Lorg/gradle/api/Project;)V
 }
 
-public final class com/eygraber/ReleaseTagVersionPlugin$inlined$sam$i$org_gradle_api_Action$0 : org/gradle/api/Action {
-	public fun <init> (Lkotlin/jvm/functions/Function1;)V
-	public final synthetic fun execute (Ljava/lang/Object;)V
-}
-
 public abstract class com/eygraber/ReleaseTagVersionTask : org/gradle/api/DefaultTask {
 	public fun <init> ()V
 	public abstract fun getBuildType ()Lorg/gradle/api/provider/Property;

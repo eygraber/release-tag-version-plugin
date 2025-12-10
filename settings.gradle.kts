@@ -47,7 +47,7 @@ rootProject.name = "release-tag-version-plugin"
 plugins {
   id("com.eygraber.conventions.settings") version "0.0.89"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
-  id("com.gradle.develocity") version "4.2.2"
+  id("com.gradle.develocity") version "4.3"
 }
 
 include(":plugin")

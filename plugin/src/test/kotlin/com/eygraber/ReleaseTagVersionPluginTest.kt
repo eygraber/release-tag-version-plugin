@@ -15,12 +15,6 @@ class ReleaseTagVersionPluginTest {
   @get:Rule
   val testProjectDir = TemporaryFolder()
 
-  companion object {
-    @get:ClassRule
-    @JvmStatic
-    val testKitDir = TemporaryFolder()
-  }
-
   @Test
   fun `plugin applies successfully`() {
     writeBuildFiles()
@@ -725,6 +719,7 @@ class ReleaseTagVersionPluginTest {
     testProjectDir.newFile(".version-override").writeText(version)
   }
 
+  @Suppress("UnnamedParameterUse")
   private fun writeBuildFiles(
     @Language("kotlin")
     buildGradleContent: String = "",
@@ -818,5 +813,11 @@ class ReleaseTagVersionPluginTest {
   ) {
     val buildFile = File(testProjectDir.root, "build.gradle.kts")
     buildFile.appendText(appendedContent)
+  }
+
+  companion object {
+    @get:ClassRule
+    @JvmStatic
+    val testKitDir = TemporaryFolder()
   }
 }

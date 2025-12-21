@@ -209,7 +209,7 @@ abstract class ReleaseTagVersionTask : DefaultTask() {
     source: VersionSource,
   ) = VersionInfo(
     code = version.buildMetadata?.toIntOrNull(),
-    name = version.toString().removeSuffix("+${version.buildMetadata}"),
+    name = version.toString().removeSuffix("+${version.buildMetadata.orEmpty()}"),
     codeSource = source,
     nameSource = source,
   )

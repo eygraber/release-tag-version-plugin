@@ -3,9 +3,8 @@ android-plugin = "8.13.2"
 
 conventions = "0.0.94"
 
-detekt = "1.23.8"
-detektCompose = "0.4.27"
-detektEygraber = "1.0.12"
+detekt = "2.0.0-alpha.1"
+detektEygraber = "1.0.14"
 
 dokka = "2.1.0"
 
@@ -21,7 +20,7 @@ publish = "0.35.0"
 
 [plugins]
 conventionsBase = { id = "com.eygraber.conventions", version.ref = "conventions" }
-conventionsDetekt = { id = "com.eygraber.conventions-detekt" }
+conventionsDetekt = { id = "com.eygraber.conventions-detekt2" }
 conventionsKotlin = { id = "com.eygraber.conventions-kotlin-library" }
 conventionsPublishToMavenCentral = { id = "com.eygraber.conventions-publish-maven-central" }
 dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis" }
@@ -29,7 +28,7 @@ dependencyAnalysisRoot = { id = "com.autonomousapps.dependency-analysis", versio
 
 [libraries]
 buildscript-android = { module = "com.android.tools.build:gradle", version.ref = "android-plugin" }
-buildscript-detekt = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
+buildscript-detekt = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 buildscript-dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 buildscript-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 buildscript-publish = { module = "com.vanniktech:gradle-maven-publish-plugin", version.ref = "publish" }

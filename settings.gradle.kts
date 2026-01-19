@@ -45,7 +45,7 @@ dependencyResolutionManagement {
 rootProject.name = "release-tag-version-plugin"
 
 plugins {
-  id("com.eygraber.conventions.settings") version "0.0.94"
+  id("com.eygraber.conventions.settings") version "0.0.97"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
   id("com.gradle.develocity") version "4.3.1"
 }

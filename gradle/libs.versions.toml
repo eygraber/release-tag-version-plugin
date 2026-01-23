@@ -10,7 +10,7 @@ dokka = "2.1.0"
 
 jvmTarget = "17"
 
-kotest = "6.1.0"
+kotest = "6.1.1"
 
 kotlin = "2.3.0"
 

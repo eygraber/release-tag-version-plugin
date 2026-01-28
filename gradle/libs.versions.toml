@@ -3,8 +3,9 @@ android-plugin = "9.0.0"
 
 conventions = "0.0.98"
 
-detekt = "2.0.0-alpha.1"
-detektEygraber = "1.0.14"
+detekt = "2.0.0-alpha.2"
+
+ktlintCustomRules = "0.1.1"
 
 dokka = "2.1.0"
 
@@ -33,12 +34,13 @@ buildscript-dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", versio
 buildscript-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 buildscript-publish = { module = "com.vanniktech:gradle-maven-publish-plugin", version.ref = "publish" }
 
-detektEygraber-formatting = { module = "com.eygraber.detekt.rules:formatting", version.ref = "detektEygraber" }
-detektEygraber-style = { module = "com.eygraber.detekt.rules:style", version.ref = "detektEygraber" }
-
 # just here so renovate picks it up
 # noinspection UnusedVersionCatalogEntry
 ktlint = { module = "com.pinterest.ktlint:ktlint-bom", version.ref = "ktlint" }
+
+# just here so renovate picks it up
+# noinspection UnusedVersionCatalogEntry
+ktlintCustomRules = { module = "com.eygraber.ktlint.rules:ktlint-rules", version.ref = "ktlintCustomRules" }
 
 semver = "io.github.z4kn4fein:semver:3.0.0"
 

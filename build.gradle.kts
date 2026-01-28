@@ -20,13 +20,6 @@ plugins {
 deleteRootBuildDirWhenCleaning()
 
 gradleConventionsDefaults {
-  detekt {
-    plugins(
-      libs.detektEygraber.formatting,
-      libs.detektEygraber.style,
-    )
-  }
-
   kotlin {
     jvmTargetVersion = JvmTarget.fromTarget(libs.versions.jvmTarget.get())
     allWarningsAsErrors = true

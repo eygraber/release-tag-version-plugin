@@ -13,7 +13,7 @@ jvmTarget = "17"
 
 kotest = "6.1.2"
 
-kotlin = "2.3.0"
+kotlin = "2.3.10"
 
 ktlint = "1.8.0"
 

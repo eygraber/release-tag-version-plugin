@@ -1,4 +1,3 @@
-import com.eygraber.conventions.kotlin.KotlinFreeCompilerArg
 import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 plugins {
@@ -41,11 +40,5 @@ dependencies {
 tasks {
   pluginUnderTestMetadata {
     pluginClasspath.from(additionalPluginClasspath)
-  }
-}
-
-gradleConventions {
-  kotlin {
-    freeCompilerArgs += KotlinFreeCompilerArg.Unknown("-Xmulti-dollar-interpolation")
   }
 }

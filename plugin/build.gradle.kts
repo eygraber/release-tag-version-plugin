@@ -1,5 +1,19 @@
 import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
+// The `kotlin-dsl` plugin pins the Kotlin Gradle plugin on this project's buildscript classpath to
+// Gradle's embedded Kotlin version, which lags behind the version we run. Align it with the project's
+// Kotlin version so this build script compiles against the same API the plugin uses at runtime
+// (the `abiValidation` DSL below only exists in the newer API).
+buildscript {
+  configurations.classpath {
+    resolutionStrategy.eachDependency {
+      if(requested.group == "org.jetbrains.kotlin" && requested.name.startsWith("kotlin-gradle-plugin")) {
+        useVersion(libs.versions.kotlin.get())
+      }
+    }
+  }
+}
+
 plugins {
   `kotlin-dsl`
   alias(libs.plugins.conventionsKotlin)
@@ -10,7 +24,7 @@ plugins {
 
 kotlin {
   @OptIn(ExperimentalAbiValidation::class)
-  abiValidation.enabled = true
+  abiValidation()
 }
 
 gradlePlugin {

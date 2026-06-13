@@ -3,7 +3,7 @@ android-plugin = "9.2.1"
 
 conventions = "0.0.100"
 
-detekt = "2.0.0-alpha.3"
+detekt = "2.0.0-alpha.4"
 
 ktlintCustomRules = "0.1.1"
 

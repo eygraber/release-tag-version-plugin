@@ -233,7 +233,13 @@ abstract class ReleaseTagVersionTask : DefaultTask() {
           .lineSequence()
           .filter { it.startsWith(versionPrefix.get()) }
           .mapNotNull { it.removePrefix(versionPrefix.get()).toVersionOrNull() }
-          .maxOrNull()
+          // Semver precedence ignores build metadata, so tags that share a version name (e.g.
+          // successive builds 1.2.3+4 and 1.2.3+5) compare equal and maxOrNull would pick an
+          // arbitrary one. The build metadata holds the version code, so tie-break equal-precedence
+          // tags by it to select the highest version code.
+          .maxWithOrNull(
+            compareBy<Version> { it }.thenBy { it.buildMetadata?.toIntOrNull() ?: 0 },
+          )
 
       else -> null
     }

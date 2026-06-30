@@ -262,6 +262,36 @@ class ReleaseTagVersionPluginTest {
   }
 
   @Test
+  fun `the highest version code wins when tags share a version name`() {
+    writeBuildFiles()
+
+    // Tagged out of order so the result can't come from git's listing order; semver precedence
+    // ties on the shared 1.2.3 name, leaving the build metadata as the only differentiator.
+    gitInit("1.2.3+4", "1.2.3+6", "1.2.3+5")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 6 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    ensureConfigurationCacheReuse("assembleRelease")
+  }
+
+  @Test
+  fun `a higher version name wins over a higher version code`() {
+    writeBuildFiles()
+
+    gitInit("1.2.3+9", "1.2.4+1")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 1 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.4 from LatestGitTag"
+
+    ensureConfigurationCacheReuse("assembleRelease")
+  }
+
+  @Test
   fun `git tag without version code is used`() {
     writeBuildFiles()
 

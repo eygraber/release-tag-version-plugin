@@ -136,10 +136,11 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
         this.gitTagsDir.set(tagsDir)
       }
 
-      val versionOverrideFile = project.file(".version-override")
-      if(versionOverrideFile.exists()) {
-        this.versionOverrideFile.set(versionOverrideFile)
-      }
+      // a missing file is filtered out so the @Optional @InputFile is treated as absent
+      // instead of failing validation
+      this.versionOverrideFile.set(
+        extension.versionOverrideFile.filter { it.asFile.exists() },
+      )
 
       this.versionCodeIsInferred.set(extension.versionCodeIsInferred)
       this.versionNameIsInferred.set(extension.versionNameIsInferred)

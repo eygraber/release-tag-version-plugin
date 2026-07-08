@@ -13,6 +13,10 @@ A Gradle plugin that uses the latest git semantic version tag to set the version
 
 2.  The plugin will automatically use the latest git semantic version tag to set the version code and version name.
 
+The plugin is compatible with the
+[configuration cache](https://docs.gradle.org/current/userguide/configuration_cache.html) and
+[isolated projects](https://docs.gradle.org/current/userguide/isolated_projects.html).
+
 ## Git Tag Format
 
 For the plugin to work, there needs to be at least one [semantic version](https://semver.org/) tag,

@@ -23,6 +23,20 @@ class ReleaseTagVersionPluginTest {
   }
 
   @Test
+  fun `plugin works with isolated projects`() {
+    writeBuildFiles(isolatedProjects = true)
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    ensureConfigurationCacheReuse("assembleRelease")
+  }
+
+  @Test
   fun `versionCodeIsInferred false doesn't set the version code`() {
     writeBuildFiles(
       """
@@ -753,6 +767,7 @@ class ReleaseTagVersionPluginTest {
   private fun writeBuildFiles(
     @Language("kotlin")
     buildGradleContent: String = "",
+    isolatedProjects: Boolean = false,
   ) {
     val androidSdkHome = System.getenv("ANDROID_HOME")
 
@@ -768,9 +783,19 @@ class ReleaseTagVersionPluginTest {
       set("org.gradle.parallel", "true")
       set("org.gradle.configuration-cache", "true")
       set("org.gradle.configuration-cache.parallel", "true")
+      if(isolatedProjects) {
+        set("org.gradle.unsafe.isolated-projects", "true")
+      }
       testProjectDir.newFile("gradle.properties").outputStream().use {
         store(it, null)
       }
+    }
+
+    // isolated projects violations only surface across project boundaries,
+    // so the app needs to live in a subproject instead of the root project
+    val appProjectInclude = when {
+      isolatedProjects -> """include(":androidApp")"""
+      else -> ""
     }
 
     testProjectDir.newFile("settings.gradle.kts").writeText(
@@ -793,10 +818,17 @@ class ReleaseTagVersionPluginTest {
       |}
       |
       |rootProject.name = "test-project"
+      |
+      |$appProjectInclude
       """.trimMargin(),
     )
 
-    testProjectDir.newFile("build.gradle.kts").writeText(
+    val appProjectDir = when {
+      isolatedProjects -> testProjectDir.newFolder("androidApp")
+      else -> testProjectDir.root
+    }
+
+    File(appProjectDir, "build.gradle.kts").writeText(
       $$"""
       |plugins {
       |  id("com.android.application")
@@ -828,8 +860,8 @@ class ReleaseTagVersionPluginTest {
       """.trimMargin(),
     )
 
-    testProjectDir.newFolder("src/main")
-    testProjectDir.newFile("src/main/AndroidManifest.xml").writeText(
+    val mainDir = File(appProjectDir, "src/main").apply { mkdirs() }
+    File(mainDir, "AndroidManifest.xml").writeText(
       """
       |<?xml version="1.0" encoding="utf-8"?>
       |<manifest xmlns:android="http://schemas.android.com/apk/res/android" />

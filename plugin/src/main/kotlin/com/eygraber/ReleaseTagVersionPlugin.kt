@@ -129,13 +129,10 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
       group = "Versioning"
       description = "Infers the version code and name from the latest git release tag and writes it to a file"
 
-      val gitDir = rootProject.file(".git/refs/tags")
-      if(gitDir.exists()) {
-        this.gitDir.set(gitDir)
-      }
-
-      val tagsDir = rootProject.file(".git/refs/tags")
-      if(tagsDir.exists()) {
+      // rootProject.file would be a cross-project access, which isolated projects forbids
+      val tagsDir = isolated.rootProject.projectDirectory.dir(".git/refs/tags")
+      if(tagsDir.asFile.exists()) {
+        this.gitDir.set(tagsDir)
         this.gitTagsDir.set(tagsDir)
       }
 

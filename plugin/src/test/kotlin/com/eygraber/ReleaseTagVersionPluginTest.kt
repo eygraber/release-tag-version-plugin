@@ -262,6 +262,28 @@ class ReleaseTagVersionPluginTest {
   }
 
   @Test
+  fun `a custom versionOverrideFile is used`() {
+    writeBuildFiles(
+      """
+      |releaseTagVersion {
+      |  versionOverrideFile.set(layout.projectDirectory.file("custom-version-override"))
+      |}
+      """.trimMargin(),
+    )
+
+    gitInit("1.0.0+1")
+    writeVersionOverrideFile("1.0.0+2")
+    testProjectDir.newFile("custom-version-override").writeText("1.2.3+5")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 5 from OverridingFile"
+    result.output shouldContain "Using versionName 1.2.3 from OverridingFile"
+
+    ensureConfigurationCacheReuse("assembleRelease")
+  }
+
+  @Test
   fun `git tag is used`() {
     writeBuildFiles()
 

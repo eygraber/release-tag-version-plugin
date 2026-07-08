@@ -23,6 +23,10 @@ For the plugin to work, there needs to be at least one [semantic version](https:
 for example `1.2.3+45`. The plugin will parse the `versionName` from the `MAJOR.MINOR.PATCH`, and the
 `versionCode` from numeric `metadata` of the latest version tag.
 
+```bash
+git tag "1.2.3+45"
+```
+
 The latest tag is chosen by semantic version precedence. Because semver precedence ignores build
 metadata, tags that share a `MAJOR.MINOR.PATCH` (e.g. successive builds `1.2.3+45` and `1.2.3+46`)
 are ranked by their numeric build metadata, so the one with the highest `versionCode` wins.

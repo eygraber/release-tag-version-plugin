@@ -14,6 +14,7 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
+import java.io.File
 import java.util.Locale
 
 /**
@@ -130,8 +131,9 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
       description = "Infers the version code and name from the latest git release tag and writes it to a file"
 
       // rootProject.file would be a cross-project access, which isolated projects forbids
-      val tagsDir = isolated.rootProject.projectDirectory.dir(".git/refs/tags")
-      if(tagsDir.asFile.exists()) {
+      val dotGit = isolated.rootProject.projectDirectory.file(".git").asFile
+      val tagsDir = dotGit.resolveGitCommonDir()?.resolve("refs/tags")
+      if(tagsDir != null && tagsDir.exists()) {
         this.gitDir.set(tagsDir)
         this.gitTagsDir.set(tagsDir)
       }
@@ -156,4 +158,32 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
       this.versionNameFile.set(versionNameFile)
     }
   }
+}
+
+private fun File.resolveGitCommonDir(): File? = when {
+  isDirectory -> this
+
+  // in a linked worktree .git is a file containing "gitdir: <worktree git dir>",
+  // and that dir's commondir file points to the main repository's .git dir,
+  // which is where refs/tags lives (tags are shared across worktrees)
+  isFile -> {
+    val worktreeGitDir =
+      readText()
+        .substringAfter("gitdir:", missingDelimiterValue = "")
+        .trim()
+        .takeIf { it.isNotEmpty() }
+        ?.let { parentFile.resolve(it).normalize() }
+
+    val commonDir =
+      worktreeGitDir
+        ?.resolve("commondir")
+        ?.takeIf(File::isFile)
+        ?.readText()
+        ?.trim()
+        ?.let { worktreeGitDir.resolve(it).normalize() }
+
+    (commonDir ?: worktreeGitDir)?.takeIf(File::isDirectory)
+  }
+
+  else -> null
 }

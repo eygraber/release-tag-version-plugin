@@ -15,6 +15,9 @@ class ReleaseTagVersionPluginTest {
   @get:Rule
   val testProjectDir = TemporaryFolder()
 
+  @get:Rule
+  val mainRepoDir = TemporaryFolder()
+
   @Test
   fun `plugin applies successfully`() {
     writeBuildFiles()
@@ -295,6 +298,42 @@ class ReleaseTagVersionPluginTest {
     result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
 
     ensureConfigurationCacheReuse("assembleRelease")
+  }
+
+  @Test
+  fun `git tag is used when the project is a linked worktree`() {
+    gitInit("1.2.3+4", directory = mainRepoDir.root)
+    gitWorktreeAdd(mainRepo = mainRepoDir.root, worktree = testProjectDir.root)
+
+    writeBuildFiles()
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    ensureConfigurationCacheReuse("assembleRelease")
+  }
+
+  @Test
+  fun `a new git tag in the main repository invalidates a worktree's task but not the configuration cache`() {
+    gitInit("1.2.3+4", directory = mainRepoDir.root)
+    gitWorktreeAdd(mainRepo = mainRepoDir.root, worktree = testProjectDir.root)
+
+    writeBuildFiles()
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    gitTag("1.2.4+5", directory = mainRepoDir.root)
+
+    val nextResult = runGradle("assembleRelease")
+
+    nextResult.output shouldContain "Using versionCode 5 from LatestGitTag"
+    nextResult.output shouldContain "Using versionName 1.2.4 from LatestGitTag"
+    nextResult.output shouldContain "Reusing configuration cache."
   }
 
   @Test
@@ -730,9 +769,10 @@ class ReleaseTagVersionPluginTest {
 
   private fun gitInit(
     vararg tags: String,
+    directory: File = testProjectDir.root,
   ) {
     ProcessBuilder("git", "init")
-      .directory(testProjectDir.root)
+      .directory(directory)
       .start()
       .apply {
         if(waitFor() != 0) {
@@ -740,12 +780,15 @@ class ReleaseTagVersionPluginTest {
         }
       }
 
-    gitCommit("initial commit")
+    gitCommit("initial commit", directory = directory)
 
-    gitTag(*tags)
+    gitTag(*tags, directory = directory)
   }
 
-  private fun gitCommit(message: String) {
+  private fun gitCommit(
+    message: String,
+    directory: File = testProjectDir.root,
+  ) {
     ProcessBuilder(
       "git",
       "-c",
@@ -757,7 +800,7 @@ class ReleaseTagVersionPluginTest {
       "-m",
       message,
     )
-      .directory(testProjectDir.root)
+      .directory(directory)
       .start()
       .apply {
         if(waitFor() != 0) {
@@ -768,10 +811,11 @@ class ReleaseTagVersionPluginTest {
 
   private fun gitTag(
     vararg tags: String,
+    directory: File = testProjectDir.root,
   ) {
     tags.forEach { tag ->
       ProcessBuilder("git", "tag", tag)
-        .directory(testProjectDir.root)
+        .directory(directory)
         .start()
         .apply {
           if(waitFor() != 0) {
@@ -779,6 +823,20 @@ class ReleaseTagVersionPluginTest {
           }
         }
     }
+  }
+
+  private fun gitWorktreeAdd(
+    mainRepo: File,
+    worktree: File,
+  ) {
+    ProcessBuilder("git", "worktree", "add", worktree.absolutePath)
+      .directory(mainRepo)
+      .start()
+      .apply {
+        if(waitFor() != 0) {
+          error("Failed to create git worktree - ${errorReader().readText()}")
+        }
+      }
   }
 
   private fun writeVersionOverrideFile(version: String) {

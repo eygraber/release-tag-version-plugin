@@ -198,6 +198,123 @@ class ReleaseTagVersionPluginTest {
   }
 
   @Test
+  fun `versionNameSuffix is appended to the version name`() {
+    writeBuildFiles(
+      """
+      |releaseTagVersion {
+      |  versionNameSuffix.set("-my-branch")
+      |}
+      """.trimMargin(),
+    )
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3-my-branch from LatestGitTag"
+
+    ensureConfigurationCacheReuse("assembleRelease")
+  }
+
+  @Test
+  fun `versionNameSuffix is appended to an overridden version name`() {
+    writeBuildFiles(
+      """
+      |releaseTagVersion {
+      |  versionNameOverride.set("5.4.3")
+      |  versionNameSuffix.set("-my-branch")
+      |}
+      """.trimMargin(),
+    )
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionName 5.4.3-my-branch from OverridingProperty"
+
+    ensureConfigurationCacheReuse("assembleRelease")
+  }
+
+  @Test
+  fun `the build type's versionNameSuffix is applied`() {
+    writeBuildFiles(
+      """
+      |android {
+      |  buildTypes {
+      |    debug {
+      |      versionNameSuffix = "-DEBUG"
+      |    }
+      |  }
+      |}
+      """.trimMargin(),
+    )
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleDebug")
+
+    result.output shouldContain "Using versionCode 5 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3-DEBUG from LatestGitTag"
+
+    ensureConfigurationCacheReuse("assembleDebug")
+  }
+
+  @Test
+  fun `a product flavor's versionNameSuffix is applied before the build type's`() {
+    writeBuildFiles(
+      """
+      |android {
+      |  flavorDimensions += "environment"
+      |
+      |  productFlavors {
+      |    create("dev") {
+      |      dimension = "environment"
+      |      versionNameSuffix = "-dev"
+      |    }
+      |  }
+      |
+      |  buildTypes {
+      |    debug {
+      |      versionNameSuffix = "-DEBUG"
+      |    }
+      |  }
+      |}
+      |
+      |releaseTagVersion {
+      |  versionNameSuffix.set("-my-branch")
+      |}
+      """.trimMargin(),
+    )
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleDevDebug")
+
+    result.output shouldContain "Using versionName 1.2.3-dev-DEBUG-my-branch from LatestGitTag"
+
+    ensureConfigurationCacheReuse("assembleDevDebug")
+  }
+
+  @Test
+  fun `versionNameSuffix invalidates the task and configuration cache`() {
+    writeBuildFiles()
+
+    gitInit("1.2.3+4")
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    val nextResult = runGradle("assembleRelease", "-PversionNameSuffix=-my-branch")
+
+    nextResult.output shouldContain "Using versionCode 4 from LatestGitTag"
+    nextResult.output shouldContain "Using versionName 1.2.3-my-branch from LatestGitTag"
+    nextResult.output shouldNotContain "Reusing configuration cache."
+  }
+
+  @Test
   fun `versionNameOverride overrides versionOverride`() {
     writeBuildFiles(
       """

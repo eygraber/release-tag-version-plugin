@@ -37,6 +37,23 @@ For non-release build types, if the version is inferred from a git tag, the calc
 incremented by one. This is done to ensure that a non-release build always has a higher version code than the
 corresponding release build.
 
+## Version name suffixes
+
+The `versionNameSuffix` that a variant's product flavors and build type declare in the Android DSL is
+applied to the inferred version name, in the order AGP would apply it - the flavors' suffixes in
+dimension order, then the build type's. A `1.2.3` tag builds a `1.2.3-DEBUG` debug APK when the debug
+build type sets `versionNameSuffix = "-DEBUG"`.
+
+`releaseTagVersion.versionNameSuffix` adds one more suffix after those, for identifying a build that
+isn't a release - a CI build of a pull request, for example:
+
+```bash
+./gradlew assembleDebug -PversionNameSuffix=-my-branch
+```
+
+That produces `1.2.3-DEBUG-my-branch`. The suffix is appended verbatim, so it is up to the caller to
+keep the result a valid semantic version if anything downstream parses it.
+
 ## Configuration
 
 The plugin can be configured using the `releaseTagVersion` extension in your `build.gradle.kts` file.
@@ -108,6 +125,12 @@ releaseTagVersion {
   // A prefix to use when searching for git tags.
   // Default: "" (empty string)
   versionPrefix.set("")
+
+  // A suffix to append to the version name, after the versionNameSuffix that the variant's
+  // product flavors and build type declare in the Android DSL.
+  // Can also be set with the versionNameSuffix Gradle property.
+  // Default: none
+  versionNameSuffix.set("-my-branch")
 
   // The build types that are considered "release" builds.
   // For these build types, the version code will be used as-is.

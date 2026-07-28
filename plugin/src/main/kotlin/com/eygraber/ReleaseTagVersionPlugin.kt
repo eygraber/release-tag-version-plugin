@@ -1,6 +1,5 @@
 package com.eygraber
 
-import com.android.build.api.dsl.ApplicationDefaultConfig
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.ApplicationVariant
@@ -9,6 +8,7 @@ import com.android.build.gradle.AppPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
@@ -40,6 +40,7 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
     versionOverride.convention(project.findProperty("versionOverride") as? String)
     versionCodeOverride.convention((project.findProperty("versionCodeOverride") as? String)?.toIntOrNull())
     versionNameOverride.convention(project.findProperty("versionNameOverride") as? String)
+    versionNameSuffix.convention(project.findProperty("versionNameSuffix") as? String)
     versionPrefix.convention("")
     releaseBuildTypes.convention(setOf("release"))
   }
@@ -47,13 +48,12 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
   private fun Project.configureVariants(extension: ReleaseTagVersionExtension) {
     plugins.withType<AppPlugin> {
       val appExtension = extensions.findByType<ApplicationExtension>()
-      val defaultConfig = appExtension?.defaultConfig
 
       extensions.findByType<ApplicationAndroidComponentsExtension>()?.onVariants { variant ->
         processVariant(
           variant = variant,
           extension = extension,
-          defaultConfig = defaultConfig,
+          appExtension = appExtension,
         )
       }
     }
@@ -62,7 +62,7 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
   private fun Project.processVariant(
     variant: ApplicationVariant,
     extension: ReleaseTagVersionExtension,
-    defaultConfig: ApplicationDefaultConfig?,
+    appExtension: ApplicationExtension?,
   ) {
     val versionCodeFile = objects.fileProperty().convention(
       layout.buildDirectory.file("generated/com/eygraber/release/tag/version/${variant.name}/code.txt"),
@@ -72,20 +72,32 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
       layout.buildDirectory.file("generated/com/eygraber/release/tag/version/${variant.name}/name.txt"),
     )
 
+    // setting the version name on the variant output replaces whatever AGP composed from the DSL,
+    // including the versionNameSuffix declared by the variant's product flavors and build type, so
+    // the plugin has to re-apply it. The extension's own suffix goes after it, the way AGP applies
+    // the build type's suffix after the flavors'.
+    var dslVersionNameSuffix = dslVersionNameSuffix(appExtension, variant)
+
+    var defaultVersionCode = appExtension?.defaultConfig?.versionCode
+    var defaultVersionName = appExtension?.defaultConfig?.versionName
+
+    afterEvaluate {
+      dslVersionNameSuffix = dslVersionNameSuffix(appExtension, variant)
+      defaultVersionCode = appExtension?.defaultConfig?.versionCode
+      defaultVersionName = appExtension?.defaultConfig?.versionName
+    }
+
+    val versionNameSuffix =
+      provider { dslVersionNameSuffix }
+        .zip(extension.versionNameSuffix.orElse("")) { dslSuffix, suffix -> "$dslSuffix$suffix" }
+
     val inferVersionTask = registerInferVersionTask(
       variant = variant,
       extension = extension,
+      versionNameSuffix = versionNameSuffix,
       versionCodeFile = versionCodeFile,
       versionNameFile = versionNameFile,
     )
-
-    var defaultVersionCode = defaultConfig?.versionCode
-    var defaultVersionName = defaultConfig?.versionName
-
-    afterEvaluate {
-      defaultVersionCode = defaultConfig?.versionCode
-      defaultVersionName = defaultConfig?.versionName
-    }
 
     variant
       .outputs
@@ -103,6 +115,7 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
           },
         )
 
+        // the inferred name already carries the suffixes, because the task writes them into the file
         output.versionName.set(
           extension.versionNameIsInferred.flatMap { isInferred ->
             when {
@@ -111,7 +124,9 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
                   .flatMap(ReleaseTagVersionTask::versionNameFile)
                   .map { it.asFile.readText() }
 
-              else -> provider { defaultVersionName }
+              else ->
+                provider { defaultVersionName }
+                  .zip(versionNameSuffix) { versionName, suffix -> "$versionName$suffix" }
             }
           },
         )
@@ -121,6 +136,7 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
   private fun Project.registerInferVersionTask(
     variant: Variant,
     extension: ReleaseTagVersionExtension,
+    versionNameSuffix: Provider<String>,
     versionCodeFile: RegularFileProperty,
     versionNameFile: RegularFileProperty,
   ): TaskProvider<ReleaseTagVersionTask> {
@@ -150,12 +166,34 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
       this.versionOverride.set(extension.versionOverride)
       this.versionCodeOverride.set(extension.versionCodeOverride)
       this.versionNameOverride.set(extension.versionNameOverride)
+      this.versionNameSuffix.set(versionNameSuffix)
       this.releaseBuildTypes.set(extension.releaseBuildTypes)
       this.versionPrefix.set(extension.versionPrefix)
       this.fallbackVersionCode.set(extension.fallbackVersionCode)
       this.fallbackVersionName.set(extension.fallbackVersionName)
       this.versionCodeFile.set(versionCodeFile)
       this.versionNameFile.set(versionNameFile)
+    }
+  }
+}
+
+/**
+ * The `versionNameSuffix` AGP would have applied to [variant] - its product flavors' suffixes in
+ * dimension order, followed by its build type's.
+ */
+private fun dslVersionNameSuffix(
+  appExtension: ApplicationExtension?,
+  variant: Variant,
+): String = when(appExtension) {
+  null -> ""
+
+  else -> buildString {
+    variant.productFlavors.forEach { (_, flavorName) ->
+      append(appExtension.productFlavors.findByName(flavorName)?.versionNameSuffix.orEmpty())
+    }
+
+    variant.buildType?.let { buildTypeName ->
+      append(appExtension.buildTypes.findByName(buildTypeName)?.versionNameSuffix.orEmpty())
     }
   }
 }

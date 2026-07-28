@@ -6,6 +6,7 @@ public abstract interface class com/eygraber/ReleaseTagVersionExtension {
 	public abstract fun getVersionCodeOverride ()Lorg/gradle/api/provider/Property;
 	public abstract fun getVersionNameIsInferred ()Lorg/gradle/api/provider/Property;
 	public abstract fun getVersionNameOverride ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionNameSuffix ()Lorg/gradle/api/provider/Property;
 	public abstract fun getVersionOverride ()Lorg/gradle/api/provider/Property;
 	public abstract fun getVersionOverrideFile ()Lorg/gradle/api/file/RegularFileProperty;
 	public abstract fun getVersionPrefix ()Lorg/gradle/api/provider/Property;
@@ -32,6 +33,7 @@ public abstract class com/eygraber/ReleaseTagVersionTask : org/gradle/api/Defaul
 	public abstract fun getVersionNameFile ()Lorg/gradle/api/file/RegularFileProperty;
 	public abstract fun getVersionNameIsInferred ()Lorg/gradle/api/provider/Property;
 	public abstract fun getVersionNameOverride ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionNameSuffix ()Lorg/gradle/api/provider/Property;
 	public abstract fun getVersionOverride ()Lorg/gradle/api/provider/Property;
 	public abstract fun getVersionOverrideFile ()Lorg/gradle/api/file/RegularFileProperty;
 	public abstract fun getVersionPrefix ()Lorg/gradle/api/provider/Property;

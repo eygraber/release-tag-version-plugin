@@ -73,6 +73,10 @@ abstract class ReleaseTagVersionTask : DefaultTask() {
   abstract val versionNameOverride: Property<String>
 
   @get:Input
+  @get:Optional
+  abstract val versionNameSuffix: Property<String>
+
+  @get:Input
   abstract val releaseBuildTypes: SetProperty<String>
 
   @get:Input
@@ -190,10 +194,12 @@ abstract class ReleaseTagVersionTask : DefaultTask() {
           ?: fallbackInfo.nameAndSource()
           ?: error("Couldn't find a version name")
 
+      val finalVersionName = "$versionName${versionNameSuffix.orNull.orEmpty()}"
+
       versionNameFile.get().asFile.apply {
         parentFile.mkdirs()
         writeText(
-          versionName.also {
+          finalVersionName.also {
             logger.info("Using versionName $it from $source")
           },
         )

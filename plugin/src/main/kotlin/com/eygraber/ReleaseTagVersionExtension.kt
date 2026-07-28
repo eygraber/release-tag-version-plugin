@@ -72,6 +72,19 @@ interface ReleaseTagVersionExtension {
   val versionNameOverride: Property<String>
 
   /**
+   * A suffix that is appended to the version name.
+   *
+   * It is applied after the `versionNameSuffix` that the variant's product flavors and build type
+   * declare in the Android DSL, so a `1.2.3` debug build of a project whose debug build type sets a
+   * `-DEBUG` suffix becomes `1.2.3-DEBUG-my-branch` when this is set to `-my-branch`.
+   *
+   * The suffix is appended verbatim; nothing checks that the result is still a valid semantic version.
+   *
+   * Default: none
+   */
+  val versionNameSuffix: Property<String>
+
+  /**
    * The build types that are considered "release" builds.
    * For these build types, the version code will be used as-is.
    * For other build types (e.g., "debug"), the version code will be incremented by 1.

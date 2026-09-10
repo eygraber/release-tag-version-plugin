@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 // The `kotlin-dsl` plugin pins the Kotlin Gradle plugin on this project's buildscript classpath to
 // Gradle's embedded Kotlin version, which lags behind the version we run. Align it with the project's
@@ -54,5 +55,16 @@ dependencies {
 tasks {
   pluginUnderTestMetadata {
     pluginClasspath.from(additionalPluginClasspath)
+  }
+
+  // The `kotlin-dsl` plugin adds `-Xuse-fir-lt=false` to every Kotlin compilation, but the Kotlin version
+  // this project runs deprecated that argument in 2.4.20. Warnings are errors here, so the deprecation
+  // fails the build; drop the argument until `kotlin-dsl` stops passing it.
+  withType<KotlinCompile>().configureEach {
+    compilerOptions {
+      freeCompilerArgs.set(
+        freeCompilerArgs.get().filterNot { arg -> arg.substringBefore('=') == "-Xuse-fir-lt" },
+      )
+    }
   }
 }

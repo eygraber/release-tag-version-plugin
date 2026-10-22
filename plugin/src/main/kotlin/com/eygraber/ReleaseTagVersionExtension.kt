@@ -44,6 +44,16 @@ interface ReleaseTagVersionExtension {
   val fallbackVersionName: Property<String>
 
   /**
+   * Whether only the git tags that are merged into `HEAD` are used.
+   *
+   * Set this when release lines branch from each other, such as a hotfix branch made from a
+   * release tag. Each line then gets its version only from its own tags.
+   *
+   * Default: `false`
+   */
+  val onlyTagsMergedIntoHead: Property<Boolean>
+
+  /**
    * A prefix to use when searching for git tags.
    *
    * Default: `""` (empty string)

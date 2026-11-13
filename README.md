@@ -126,6 +126,15 @@ releaseTagVersion {
   // Default: "" (empty string)
   versionPrefix.set("")
 
+  // Whether only the git tags that are merged into HEAD are used.
+  // Set this when release lines branch from each other, such as a hotfix branch made from a
+  // release tag. Each line then gets its version only from its own tags.
+  // A shallow clone holds only part of the history, so git can miss tags that are merged into HEAD.
+  // If git finds no merged tag, the fallback version is used. Fetch the full history in CI,
+  // for example with fetch-depth: 0 in actions/checkout.
+  // Default: false
+  onlyTagsMergedIntoHead.set(false)
+
   // A suffix to append to the version name, after the versionNameSuffix that the variant's
   // product flavors and build type declare in the Android DSL.
   // Can also be set with the versionNameSuffix Gradle property.

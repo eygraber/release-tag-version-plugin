@@ -42,6 +42,7 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
     versionNameOverride.convention(project.findProperty("versionNameOverride") as? String)
     versionNameSuffix.convention(project.findProperty("versionNameSuffix") as? String)
     versionPrefix.convention("")
+    onlyTagsMergedIntoHead.convention(false)
     releaseBuildTypes.convention(setOf("release"))
   }
 
@@ -148,11 +149,29 @@ class ReleaseTagVersionPlugin : Plugin<Project> {
 
       // rootProject.file would be a cross-project access, which isolated projects forbids
       val dotGit = isolated.rootProject.projectDirectory.file(".git").asFile
-      val tagsDir = dotGit.resolveGitCommonDir()?.resolve("refs/tags")
+      val headGitDir = dotGit.resolveHeadGitDir()
+      val commonGitDir = headGitDir?.resolveCommonGitDir()
+      val tagsDir = commonGitDir?.resolve("refs/tags")
       if(tagsDir != null && tagsDir.exists()) {
         this.gitDir.set(tagsDir)
         this.gitTagsDir.set(tagsDir)
       }
+
+      val onlyTagsMergedIntoHead = extension.onlyTagsMergedIntoHead
+      this.onlyTagsMergedIntoHead.set(onlyTagsMergedIntoHead)
+      this.gitHeadFile.fileProvider(
+        onlyTagsMergedIntoHead.map { isEnabled -> headGitDir?.resolve("HEAD")?.takeIf { isEnabled && it.isFile } },
+      )
+      this.gitBranchesDir.fileProvider(
+        onlyTagsMergedIntoHead.map { isEnabled ->
+          commonGitDir?.resolve("refs/heads")?.takeIf { isEnabled && it.isDirectory }
+        },
+      )
+      this.gitPackedRefsFile.fileProvider(
+        onlyTagsMergedIntoHead.map { isEnabled ->
+          commonGitDir?.resolve("packed-refs")?.takeIf { isEnabled && it.isFile }
+        },
+      )
 
       // a missing file is filtered out so the @Optional @InputFile is treated as absent
       // instead of failing validation
@@ -198,30 +217,27 @@ private fun dslVersionNameSuffix(
   }
 }
 
-private fun File.resolveGitCommonDir(): File? = when {
+private fun File.resolveHeadGitDir(): File? = when {
   isDirectory -> this
 
-  // in a linked worktree .git is a file containing "gitdir: <worktree git dir>",
-  // and that dir's commondir file points to the main repository's .git dir,
-  // which is where refs/tags lives (tags are shared across worktrees)
-  isFile -> {
-    val worktreeGitDir =
-      readText()
-        .substringAfter("gitdir:", missingDelimiterValue = "")
-        .trim()
-        .takeIf { it.isNotEmpty() }
-        ?.let { parentFile.resolve(it).normalize() }
-
-    val commonDir =
-      worktreeGitDir
-        ?.resolve("commondir")
-        ?.takeIf(File::isFile)
-        ?.readText()
-        ?.trim()
-        ?.let { worktreeGitDir.resolve(it).normalize() }
-
-    (commonDir ?: worktreeGitDir)?.takeIf(File::isDirectory)
-  }
+  isFile ->
+    readText()
+      .substringAfter("gitdir:", missingDelimiterValue = "")
+      .trim()
+      .takeIf { it.isNotEmpty() }
+      ?.let { parentFile.resolve(it).normalize() }
+      ?.takeIf(File::isDirectory)
 
   else -> null
+}
+
+private fun File.resolveCommonGitDir(): File? {
+  val commonDir =
+    resolve("commondir")
+      .takeIf(File::isFile)
+      ?.readText()
+      ?.trim()
+      ?.let { resolve(it).normalize() }
+
+  return (commonDir ?: this).takeIf(File::isDirectory)
 }

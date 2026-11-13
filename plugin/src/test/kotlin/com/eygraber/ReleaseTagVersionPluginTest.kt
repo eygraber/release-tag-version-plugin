@@ -454,6 +454,69 @@ class ReleaseTagVersionPluginTest {
   }
 
   @Test
+  fun `tags on other branches are used by default`() {
+    writeBuildFiles()
+
+    gitInitWithTagOnOtherBranch()
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 10 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.3.0 from LatestGitTag"
+  }
+
+  @Test
+  fun `onlyTagsMergedIntoHead ignores tags on other branches`() {
+    writeBuildFiles(ONLY_TAGS_MERGED_INTO_HEAD)
+
+    gitInitWithTagOnOtherBranch()
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    ensureConfigurationCacheReuse("assembleRelease")
+  }
+
+  @Test
+  fun `a checkout invalidates the task but not the configuration cache when onlyTagsMergedIntoHead is set`() {
+    writeBuildFiles(ONLY_TAGS_MERGED_INTO_HEAD)
+
+    gitInitWithTagOnOtherBranch()
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    gitCheckout(OTHER_BRANCH)
+
+    val nextResult = runGradle("assembleRelease")
+
+    nextResult.output shouldContain "Using versionCode 10 from LatestGitTag"
+    nextResult.output shouldContain "Using versionName 1.3.0 from LatestGitTag"
+    nextResult.output shouldContain "Reusing configuration cache."
+  }
+
+  @Test
+  fun `onlyTagsMergedIntoHead uses the HEAD of a linked worktree`() {
+    gitInit("1.2.3+4", directory = mainRepoDir.root)
+    gitCommit("a new commit", directory = mainRepoDir.root)
+    gitTag("1.3.0+10", directory = mainRepoDir.root)
+    gitWorktreeAdd(mainRepo = mainRepoDir.root, worktree = testProjectDir.root, commitish = "1.2.3+4")
+
+    writeBuildFiles(ONLY_TAGS_MERGED_INTO_HEAD)
+
+    val result = runGradle("assembleRelease")
+
+    result.output shouldContain "Using versionCode 4 from LatestGitTag"
+    result.output shouldContain "Using versionName 1.2.3 from LatestGitTag"
+
+    ensureConfigurationCacheReuse("assembleRelease")
+  }
+
+  @Test
   fun `the highest version code wins when tags share a version name`() {
     writeBuildFiles()
 
@@ -942,11 +1005,39 @@ class ReleaseTagVersionPluginTest {
     }
   }
 
+  private fun gitInitWithTagOnOtherBranch() {
+    gitInit("1.2.3+4")
+    gitCheckout("-b", OTHER_BRANCH)
+    gitCommit("a commit on another branch")
+    gitTag("1.3.0+10")
+    gitCheckout("-")
+  }
+
+  private fun gitCheckout(
+    vararg args: String,
+    directory: File = testProjectDir.root,
+  ) {
+    ProcessBuilder("git", "checkout", "-q", *args)
+      .directory(directory)
+      .start()
+      .apply {
+        if(waitFor() != 0) {
+          error("Failed to check out ${args.joinToString(" ")} - ${errorReader().readText()}")
+        }
+      }
+  }
+
   private fun gitWorktreeAdd(
     mainRepo: File,
     worktree: File,
+    commitish: String? = null,
   ) {
-    ProcessBuilder("git", "worktree", "add", worktree.absolutePath)
+    val args = when(commitish) {
+      null -> listOf("git", "worktree", "add", worktree.absolutePath)
+      else -> listOf("git", "worktree", "add", "--detach", worktree.absolutePath, commitish)
+    }
+
+    ProcessBuilder(args)
       .directory(mainRepo)
       .start()
       .apply {
@@ -1075,6 +1166,14 @@ class ReleaseTagVersionPluginTest {
   }
 
   companion object {
+    private const val OTHER_BRANCH = "other"
+
+    private const val ONLY_TAGS_MERGED_INTO_HEAD = """
+      releaseTagVersion {
+        onlyTagsMergedIntoHead.set(true)
+      }
+    """
+
     @get:ClassRule
     @JvmStatic
     val testKitDir = TemporaryFolder()

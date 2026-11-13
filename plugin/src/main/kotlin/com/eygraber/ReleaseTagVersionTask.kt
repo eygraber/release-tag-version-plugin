@@ -58,6 +58,24 @@ abstract class ReleaseTagVersionTask : DefaultTask() {
   abstract val gitTagsDir: DirectoryProperty
 
   @get:Input
+  abstract val onlyTagsMergedIntoHead: Property<Boolean>
+
+  @get:InputFile
+  @get:PathSensitive(RELATIVE)
+  @get:Optional
+  abstract val gitHeadFile: RegularFileProperty
+
+  @get:InputDirectory
+  @get:PathSensitive(RELATIVE)
+  @get:Optional
+  abstract val gitBranchesDir: DirectoryProperty
+
+  @get:InputFile
+  @get:PathSensitive(RELATIVE)
+  @get:Optional
+  abstract val gitPackedRefsFile: RegularFileProperty
+
+  @get:Input
   abstract val buildType: Property<String>
 
   @get:Input
@@ -224,10 +242,21 @@ abstract class ReleaseTagVersionTask : DefaultTask() {
     if(!gitDir.isPresent || !gitDir.get().asFile.exists()) return null
     if(!gitTagsDir.isPresent || !gitTagsDir.get().asFile.exists()) return null
 
-    val process =
-      ProcessBuilder("sh", "-c", "git tag -l")
-        .directory(gitDir.get().asFile.parentFile)
-        .start()
+    val process = when {
+      onlyTagsMergedIntoHead.get() -> {
+        val headFile = gitHeadFile.orNull?.asFile ?: return null
+
+        // run from the git dir that holds HEAD so that a linked worktree uses its own HEAD
+        ProcessBuilder("git", "tag", "-l", "--merged", "HEAD")
+          .directory(headFile.parentFile)
+          .start()
+      }
+
+      else ->
+        ProcessBuilder("sh", "-c", "git tag -l")
+          .directory(gitDir.get().asFile.parentFile)
+          .start()
+    }
 
     val exitCode = process.waitFor()
 
